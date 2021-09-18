@@ -1,9 +1,6 @@
 module Main where
 
-import Debug.Trace
-import Game
 import Prelude
-
 import CSS as CSS
 import CSS.TextAlign as CSSTA
 import CSS.VerticalAlign as CSSVA
@@ -12,14 +9,12 @@ import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Console (log)
+import Game (GameState(..), draw, evaluate, newGame, play, switchPlayer, win)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.CSS as HCSS
-import Halogen.HTML.Elements as HEL
 import Halogen.HTML.Events as HEV
-import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 
 data Query a = ResetGame a
@@ -71,7 +66,7 @@ genCellView pos state = let GameState {cells, player} = state.gameState
                               Just Nothing  -> HH.div
                                                (if state.status == InProgress
                                                 then
-                                                  [css,HEV.onClick (\_ -> Just (Play pos unit))] --(HEL.input (Play pos unit))]
+                                                  [css,HEV.onClick (\_ -> (Play pos unit))] --(HEL.input (Play pos unit))]
                                                 else
                                                   [css])
                                                [HH.text " "]
@@ -84,7 +79,6 @@ genCellView pos state = let GameState {cells, player} = state.gameState
                                      CSSVA.verticalAlign CSSVA.Middle
                                 ] [div]
 
-myBoard :: forall m. H.Component HH.HTML Query Unit Void m
 myBoard =
   H.mkComponent { initialState: const initialState
                 , render: render
@@ -97,14 +91,14 @@ myBoard =
     initialState :: State
     initialState = {gameState: newGame, status: InProgress}
 
-    render :: State -> H.ComponentHTML (Query Unit) () m
+--    render :: State -> H.ComponentHTML (Query Unit) () m
     render state =
       let
         label = show state
       in HH.div []
          [ HH.button 
            [
-             HEV.onClick (\_ -> Just (ResetGame unit))
+             HEV.onClick (\_ -> ResetGame unit)
              {-HEV.onClick (HEL.input ResetGame)-}
            ] 
            [HH.text "Reset"]
@@ -132,7 +126,6 @@ myBoard =
          , HH.text $ show state.status
          ]
 
-    handleAction :: forall o. (Query Unit) -> H.HalogenM State (Query Unit) () o m Unit
     handleAction = case _ of
       ResetGame qp -> do
         state <- H.get
